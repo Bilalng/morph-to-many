@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+
 class Commet extends Model
 {
+    protected $table = 'comments';
     protected $fillable = [
         'content',
         'commantable_type',
