@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
 class Commet extends Model
 {
     protected $fillable = [
@@ -21,5 +20,23 @@ class Commet extends Model
     public function commantable()
     {
         return $this->morphTo();
+    }
+
+    public function replies(){
+        return $this->belongsToMany(
+            Comment::class,
+            'comment_replies',
+            'comment_id',
+            'reply_id'
+        );
+    }
+
+    public function parent(){
+        return $this->belongsToMany(
+            Comment::class,
+            'comment_replies',
+            'reply_id',
+            'comment_id'
+        );
     }
 }
