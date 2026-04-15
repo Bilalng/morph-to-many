@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('comment_replies', function (Blueprint $table) {
           $table->unsignedBigInteger('parent_id');
-          $table->unsignedBigInteger('reply_id');
+          $table->unsignedBigInteger('reply_id')->unique();
         });
     }
 
