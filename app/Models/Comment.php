@@ -10,8 +10,8 @@ class Comment extends Model
     protected $table = 'comments';
     protected $fillable = [
         'content',
-        'commantable_type',
-        'commantable_id',
+        'commentable_type',
+        'commentable_id',
     ];
 
 
@@ -20,7 +20,7 @@ class Comment extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function commantable()
+    public function commentable()
     {
         return $this->morphTo();
     }
@@ -29,7 +29,7 @@ class Comment extends Model
         return $this->belongsToMany(
             Comment::class,
             'comment_replies',
-            'comment_id',
+            'parent_id',
             'reply_id'
         );
     }
@@ -39,7 +39,7 @@ class Comment extends Model
             Comment::class,
             'comment_replies',
             'reply_id',
-            'comment_id'
+            'parent_id'
         );
     }
 }

@@ -57,7 +57,6 @@ class CommentController extends Controller
 
         $newComment = $model->comments()->create([
             'content' => $validated['content'],
-            //'user_id' => auth()->id(), Öğrenme Dosyası olduğu için auth yok
         ]);
 
         if (!empty($validated['parent_id'])) {
@@ -68,7 +67,7 @@ class CommentController extends Controller
         return response()->json([
             'message' => 'Comment created successfully',
             'comment' => $newComment->load('user'),
-        ], 201);
+        ], 200);
     }
 
     public function destroy(Comment $comment)

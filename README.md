@@ -1,66 +1,213 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Morph-to-Many Yorum Sistemi
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 12 ile geliştirilmiş, **polimorfik yorum sistemi** ve iç içe yanıt (reply) desteği sunan bir REST API projesidir. Yorumlar, Laravel'in `morphMany` ilişkisi sayesinde tek bir `comments` tablosu üzerinden `Post` ve `Video` gibi farklı modellere bağlanabilir. Yorumlar arası yanıt ilişkisi ise ayrı bir pivot tablo ve `belongsToMany` ile yönetilir. Proje, polimorfizm ile many-to-many ilişkisini aynı anda kullanan bir tasarım örneği sunmaktadır.
 
-## About Laravel
+## Mimari Genel Bakış
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+```
+posts    ──┐
+            ├── comments (morphMany) ── comment_replies (pivot, belongsToMany)
+videos   ──┘
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Tablo             | Açıklama                                                    |
+|-------------------|-------------------------------------------------------------|
+| `posts`           | Yorum yapılabilen model                                     |
+| `videos`          | Yorum yapılabilen model                                     |
+| `comments`        | Tüm yorumları tutan tablo (`commentable_type/id` kolonları) |
+| `comment_replies` | Ana yorum ile yanıtları ilişkilendiren pivot tablo          |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Gereksinimler
 
-## Learning Laravel
+- PHP >= 8.2
+- Composer
+- MySQL
+- Laravel 12
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Kurulum
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. Projeyi klonla
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+git clone https://github.com/<kullanici-adin>/morph-to-many.git
+cd morph-to-many
+```
 
-## Laravel Sponsors
+### 2. Bağımlılıkları yükle
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+composer install
+```
 
-### Premium Partners
+### 3. Ortam dosyasını ayarla
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Contributing
+`.env` dosyasını açıp veritabanı bilgilerini gir:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=morph-to-many
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## Code of Conduct
+### 4. Veritabanını oluştur
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```sql
+CREATE DATABASE `morph-to-many`;
+```
 
-## Security Vulnerabilities
+### 5. Migration'ları çalıştır ve örnek veri yükle
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan migrate --seed
+```
 
-## License
+Bu komut migration'ları çalıştırır ve ardından otomatik olarak seeder'ı tetikler. Seeder şunları oluşturur:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- 5 kullanıcı
+- 5 post (her birinde 3 üst düzey yorum + her yoruma 2 yanıt)
+- 3 video (her birinde 2 üst düzey yorum + her yoruma 2 yanıt)
+
+Veritabanı zaten kuruluysa sadece seeder'ı çalıştırmak için:
+
+```bash
+php artisan db:seed
+```
+
+### 6. Sunucuyu başlat
+
+```bash
+php artisan serve
+```
+
+API `http://localhost:8000` adresinde ayağa kalkar.
+
+---
+
+## API Endpoint'leri
+
+Tüm route'lar `/api/v1` prefix'i ile başlar.
+
+### Yorumlar
+
+| Metot  | Endpoint           | Açıklama                                    |
+|--------|--------------------|---------------------------------------------|
+| GET    | `/comments`        | Belirli bir modele ait yorumları listele     |
+| POST   | `/comments`        | Yeni yorum oluştur (veya yanıt ver)          |
+| GET    | `/comments/{id}`   | Tek bir yorumu yanıtlarıyla birlikte getir   |
+| DELETE | `/comments/{id}`   | Yorumu sil                                  |
+
+---
+
+### GET /api/v1/comments
+
+Bir post veya video'ya ait üst düzey (parent olmayan) yorumları döner.
+
+**Query Parametreleri:**
+
+| Parametre          | Tip     | Zorunlu | Açıklama                     |
+|--------------------|---------|---------|------------------------------|
+| `commentable_type` | string  | Evet    | `post` veya `video`          |
+| `commentable_id`   | integer | Evet    | Post veya video'nun ID'si    |
+
+**Örnek:**
+
+```bash
+curl "http://localhost:8000/api/v1/comments?commentable_type=post&commentable_id=1"
+```
+
+**Yanıt:**
+
+```json
+{
+  "comments": [
+    {
+      "id": 1,
+      "content": "Harika bir yazı!",
+      "commentable_type": "post",
+      "commentable_id": 1,
+      "user": null,
+      "replies": []
+    }
+  ]
+}
+```
+
+---
+
+### POST /api/v1/comments
+
+Yeni bir yorum oluşturur. Mevcut bir yoruma yanıt vermek için `parent_id` alanını ekle.
+
+**İstek Gövdesi:**
+
+| Alan               | Tip     | Zorunlu | Açıklama                                  |
+|--------------------|---------|---------|-------------------------------------------|
+| `commentable_type` | string  | Evet    | `post` veya `video`                       |
+| `commentable_id`   | integer | Evet    | Post veya video'nun ID'si                 |
+| `content`          | string  | Evet    | Yorum metni                               |
+| `parent_id`        | integer | Hayır   | Yanıt verilecek yorumun ID'si             |
+
+**Örnek — yorum oluştur:**
+
+```bash
+curl -X POST http://localhost:8000/api/v1/comments \
+  -H "Content-Type: application/json" \
+  -d '{"commentable_type":"post","commentable_id":1,"content":"Çok güzel bir yazı!"}'
+```
+
+**Örnek — yoruma yanıt ver:**
+
+```bash
+curl -X POST http://localhost:8000/api/v1/comments \
+  -H "Content-Type: application/json" \
+  -d '{"commentable_type":"post","commentable_id":1,"parent_id":1,"content":"Kesinlikle katılıyorum!"}'
+```
+
+---
+
+### DELETE /api/v1/comments/{id}
+
+```bash
+curl -X DELETE http://localhost:8000/api/v1/comments/1
+```
+
+---
+
+Post ve video'lar için de temel CRUD endpoint'leri mevcuttur (`update` hariç):
+
+- `GET/POST/DELETE /api/v1/posts`
+- `GET/POST/DELETE /api/v1/videos`
+
+---
+
+## Testleri Çalıştırma
+
+Testler **Pest** ile yazılmış olup gerçek bir MySQL veritabanına karşı çalışır. `RefreshDatabase` trait'i her testten önce migration'ları taze olarak kurar ve test bittikten sonra geri alır — mevcut verilerin hiçbiri etkilenmez.
+
+Testleri çalıştırmadan önce `morph-to-many` veritabanının mevcut ve erişilebilir olduğundan emin ol (bağlantı bilgileri `phpunit.xml` dosyasından okunur).
+
+```bash
+php artisan test
+```
+
+Ya da doğrudan Pest ile:
+
+```bash
+./vendor/bin/pest
+```
+
+### Test Kapsamı
+
+| Test | Ne kontrol eder |
+|------|-----------------|
+| `can fetch comments of a specific model` | GET isteği, ilgili post'a ait yorumları döndürüyor mu |
+| `can create a new comment` | POST isteği, yorumu `comments` tablosuna kaydediyor mu |
+| `can reply to an existing comment` | `parent_id` ile gelen POST, `comment_replies` pivot tablosuna ilişki satırını yazıyor mu |
